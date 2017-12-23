@@ -1,0 +1,7 @@
+tar: build
+	rm -rf _build/qubes_ssh_agent
+	mkdir _build/qubes_ssh_agent
+	cp qubes_ssh_agent.xen _build/qubes_ssh_agent/vmlinuz
+	touch _build/qubes_ssh_agent/modules.img
+	cat /dev/null | gzip > _build/qubes_ssh_agent/initramfs
+	tar cjf qubes_ssh_agent.tar.bz2 -C _build qubes_ssh_agent
