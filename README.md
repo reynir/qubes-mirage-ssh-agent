@@ -2,8 +2,6 @@
 
 A WIP ssh-agent [Mirage](https://mirage.io/) unikernel for [Qubes OS](https://qubes-os.org/).
 
-Note: So far only Qubes R4-rc3 has been tested.
-
 ## How to build
 
 The following two dependencies must be pinned.
