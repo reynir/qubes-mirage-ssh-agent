@@ -25,3 +25,5 @@ To compile:
     make
 
 There are external dependencies that you may have to install separately, e.g. perhaps curl. Please open an issue if you discover any missing steps.
+
+See [qubes-app-split-ssh](https://github.com/henn/qubes-app-split-ssh) on how you can set up client VMs to use the ssh-agent.
