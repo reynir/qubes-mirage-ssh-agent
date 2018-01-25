@@ -11,7 +11,9 @@ let with_faraday (f : Faraday.t -> unit) : string =
   Faraday.serialize_to_string buf
 
 let rec handler ~user command flow : int Lwt.t =
-  Log.info (fun f -> f "Connection %S:%S\n" user command);
+  Log.info (fun f -> f "Connection %S:%S" user command);
+  (* TODO: check return value? *)
+  let _ = Memory_pressure.status () in
   let prefix' = String.sub command 0 (String.length prefix) in
   if prefix <> prefix'
   then begin Log.info (fun f -> f "Wrong prefix");
