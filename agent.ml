@@ -23,7 +23,7 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
     let identities = List.map pubkey_identity_of_identity !identities in
     Ssh_agent_identities_answer identities
   | Ssh_agentc_sign_request (pubkey,blob,flags) ->
-    begin match List.find (fun ({ privkey; comment } as id) ->
+    begin match List.find (fun id ->
         (pubkey_identity_of_identity id).pubkey = pubkey)
         !identities with
     | { privkey; comment } ->
