@@ -5,6 +5,11 @@ module Log = (val Logs.src_log src : Logs.LOG)
 
 let prefix = "QUBESRPC qubes.SshAgent "
 
+let with_faraday (f : Faraday.t -> unit) : string =
+  let buf = Faraday.create 1024 in
+  f buf;
+  Faraday.serialize_to_string buf
+
 let rec handler ~user command flow : int Lwt.t =
   Log.info (fun f -> f "Connection %S:%S\n" user command);
   let prefix' = String.sub command 0 (String.length prefix) in
@@ -28,7 +33,7 @@ let rec handler ~user command flow : int Lwt.t =
         let resp = Agent.handler req in
         Log.info (fun f -> f "Writing response...");
         let resp =
-          Ssh_agent.Serialize.with_faraday (fun t ->
+          with_faraday (fun t ->
               Ssh_agent.Serialize.write_ssh_agent_response t resp) in
         Qubes.RExec.Flow.write flow (Cstruct.of_string resp) >>= fun () ->
         handler ~user command flow
