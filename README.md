@@ -11,10 +11,6 @@ To compile 4.05.0, run `opam switch install 4.05.0`. Then run `eval $(opam confi
 
 You should now have a working OCaml setup to continue.
 
-The following two dependencies must be pinned.
-The angstrom repository has to be pinned until https://github.com/inhabitedtype/angstrom/issues/118 is fixed.
-
-    opam pin add --no-action -y ssh-agent https://github.com/reynir/ocaml-ssh-agent.git
     opam install -y mirage
 
 To compile:
