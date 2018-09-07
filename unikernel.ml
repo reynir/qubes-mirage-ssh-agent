@@ -48,6 +48,19 @@ let handler ~user command flow : int Lwt.t =
 
 module Main (DB : Qubes.S.DB) = struct
 
+  (* We don't use the GUI, but it's interesting to keep an eye on it.
+     If the other end dies, don't let it take us with it (can happen on log out). *)
+  let watch_gui gui =
+    Lwt.async (fun () ->
+      Lwt.try_bind
+        (fun () -> Qubes.GUI.listen gui)
+        (fun `Cant_happen -> assert false)
+        (fun ex ->
+          Log.warn (fun f -> f "GUI thread failed: %s" (Printexc.to_string ex));
+          Lwt.return ()
+        )
+    )
+
   let start qubesdb () =
     Log.info (fun f -> f "Starting...");
     let qrexec = Qubes.RExec.connect ~domid:0 () in
@@ -56,7 +69,7 @@ module Main (DB : Qubes.S.DB) = struct
     let agent_listener = Qubes.RExec.listen qrexec
         handler in
     gui >>= fun gui ->
-    Lwt.async (fun () -> Qubes.GUI.listen gui);
+    watch_gui gui;
     Lwt.async (fun () -> OS.Lifecycle.await_shutdown_request () >>=
                 fun (`Poweroff | `Reboot) -> Qubes.RExec.disconnect qrexec);
     Log.info (fun f -> f "Ready to listen");
