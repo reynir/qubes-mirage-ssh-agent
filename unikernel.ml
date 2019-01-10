@@ -53,7 +53,11 @@ module Main (DB : Qubes.S.DB) = struct
   let watch_gui gui =
     Lwt.async (fun () ->
       Lwt.try_bind
-        (fun () -> Qubes.GUI.listen gui)
+        (fun () ->
+           gui >>= fun gui ->
+           Log.info (fun f -> f "GUI agent connected");
+           Qubes.GUI.listen gui
+        )
         (fun `Cant_happen -> assert false)
         (fun ex ->
           Log.warn (fun f -> f "GUI thread failed: %s" (Printexc.to_string ex));
@@ -64,12 +68,10 @@ module Main (DB : Qubes.S.DB) = struct
   let start qubesdb () =
     Log.info (fun f -> f "Starting...");
     let qrexec = Qubes.RExec.connect ~domid:0 () in
-    let gui = Qubes.GUI.connect ~domid:0 () in
+    Qubes.GUI.connect ~domid:0 () |> watch_gui;
     qrexec >>= fun qrexec ->
     let agent_listener = Qubes.RExec.listen qrexec
         handler in
-    gui >>= fun gui ->
-    watch_gui gui;
     Lwt.async (fun () -> OS.Lifecycle.await_shutdown_request () >>=
                 fun (`Poweroff | `Reboot) -> Qubes.RExec.disconnect qrexec);
     Log.info (fun f -> f "Ready to listen");
