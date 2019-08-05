@@ -75,7 +75,6 @@ module Main (DB : Qubes.S.DB) = struct
     Lwt.async (fun () -> OS.Lifecycle.await_shutdown_request () >>=
                 fun (`Poweroff | `Reboot) -> Qubes.RExec.disconnect qrexec);
     Log.info (fun f -> f "Ready to listen");
-    Memory_pressure.init ();
     agent_listener
 
 end
