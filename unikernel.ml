@@ -41,7 +41,7 @@ let handler ~user command flow : int Lwt.t =
             loop state
         end
       | Angstrom.Buffered.Fail (_, _, e) ->
-        Log.err (fun f -> f "Error parsing request: %s" e);
+        Log.debug (fun f -> f "Error parsing request: %s" e);
         Lwt.return 1
     in
     loop (Angstrom.Buffered.parse Ssh_agent.Parse.ssh_agentc_message)
