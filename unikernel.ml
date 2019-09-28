@@ -44,7 +44,14 @@ let handler ~user command flow : int Lwt.t =
         Log.debug (fun f -> f "Error parsing request: %s" e);
         Lwt.return 1
     in
-    loop (Angstrom.Buffered.parse Ssh_agent.Parse.ssh_agentc_message)
+    let state = Angstrom.Buffered.parse Ssh_agent.Parse.ssh_agentc_message in
+    Qubes.RExec.Flow.read flow >>= function
+    | `Ok input ->
+      let state = Angstrom.Buffered.feed state (`Bigstring (Cstruct.to_bigarray input)) in
+      loop state
+    | `Eof ->
+      (* Silently ignore quiet clients *)
+      Lwt.return 0
 
 module Main (DB : Qubes.S.DB) = struct
 
