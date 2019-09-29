@@ -1,0 +1,6 @@
+[Socket]
+ListenStream=/var/run/mirage-ssh-agent/qrexec.sock
+SocketUser=user
+SocketGroup=user
+SocketMode=0600
+Accept=yes
