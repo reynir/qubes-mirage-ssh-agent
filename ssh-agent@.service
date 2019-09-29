@@ -2,4 +2,5 @@ Requires=ssh-agent.socket
 [Service]
 StandardInput=socket
 StandardOutput=socket
+# Replace mirage-ssh-agent if you named the ssh-agent VM differently
 ExecStart=/usr/bin/qrexec-client-vm --buffer-size 1024 mirage-ssh-agent qubes.SshAgent

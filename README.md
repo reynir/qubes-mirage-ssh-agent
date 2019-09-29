@@ -21,4 +21,14 @@ To compile:
 
 There are external dependencies that you may have to install separately, e.g. perhaps curl. Please open an issue if you discover any missing steps.
 
-See [qubes-app-split-ssh](https://github.com/henn/qubes-app-split-ssh) on how you can set up client VMs to use the ssh-agent.
+## Setup
+
+The build produces a file `qubes_ssh_agent.tar.bz2` that can be extracted to `/var/lib/qubes/vm-kernels`. See e.g. https://github.com/mirage/qubes-mirage-firewall#deploy on how to deploy the unikernel.
+
+### Dom0
+
+Create a file `/etc/qubes-rpc/policy/qubes.SshAgent` with the policy you desire. A good start is `$anyvm $anyvm ask`.
+
+### Client DomU
+
+Copy `ssh-agent.socket` and `ssh-agent@.service` to `/etc/systemd/system/` in the client VM, and run `systemctl start ssh-agent.socket; systemctl enable ssh-agent.socket`. Then configure your shell to set `SSH_AUTH_SOCK` to `/var/run/mirage-ssh-agent/qrexec.sock`.
