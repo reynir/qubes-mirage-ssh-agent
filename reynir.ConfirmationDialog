@@ -1,0 +1,4 @@
+#!/bin/sh
+
+logger "$(head -n1 | base64 -d)"
+echo true
