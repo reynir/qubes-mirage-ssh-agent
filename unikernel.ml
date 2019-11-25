@@ -40,7 +40,7 @@ let handler ~user command flow : int Lwt.t =
             let state = Angstrom.Buffered.feed state (`Bigstring (Cstruct.to_bigarray input)) in
             loop state
         end
-      | Angstrom.Buffered.Fail ({ Angstrom.Buffered.len = 0 }, _, e) ->
+      | Angstrom.Buffered.Fail ({ Angstrom.Buffered.len = 0; _ }, _, _e) ->
         (* Connection closed with no partial messages *)
         Lwt.return 0
       | Angstrom.Buffered.Fail (_, _, e) ->
@@ -70,7 +70,7 @@ module Main (DB : Qubes.S.DB) = struct
         )
     )
 
-  let start qubesdb () =
+  let start _qubesdb () =
     Log.info (fun f -> f "Starting...");
     let qrexec = Qubes.RExec.connect ~domid:0 () in
     Qubes.GUI.connect ~domid:0 () |> watch_gui;
