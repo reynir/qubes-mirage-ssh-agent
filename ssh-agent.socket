@@ -1,6 +1,12 @@
+[Unit]
+Description=Qubes ssh-agent socket
+
 [Socket]
 ListenStream=/var/run/mirage-ssh-agent/qrexec.sock
 SocketUser=user
 SocketGroup=user
 SocketMode=0600
 Accept=yes
+
+[Install]
+WantedBy=sockets.target
