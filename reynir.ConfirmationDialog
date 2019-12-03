@@ -1,4 +1,8 @@
 #!/bin/sh
 
-logger "$(head -n1 | base64 -d)"
-echo true
+message="$(head -n1 | base64 -d)"
+if xmessage -buttons yes:0,no:1 "$message"; then
+	echo true
+else
+	echo false
+fi
