@@ -1,8 +1,14 @@
 #!/bin/sh
 
 message="$(head -n1 | base64 -d)"
-if xmessage -buttons yes:0,no:1 "$message"; then
-	echo true
-else
-	echo false
-fi
+xmessage -buttons yes:0,no:2 "$message"
+case "$?" in
+	0)
+		echo true
+		;;
+	2)
+		echo false
+		;;
+	*)
+		exit 1
+esac
