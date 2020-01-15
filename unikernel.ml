@@ -61,9 +61,9 @@ module Main (DB : Qubes.S.DB) = struct
         (fun () ->
            gui >>= fun gui ->
            Log.info (fun f -> f "GUI agent connected");
-           Qubes.GUI.listen gui
+           Qubes.GUI.listen gui ()
         )
-        (fun `Cant_happen -> assert false)
+        (fun _ -> assert false)
         (fun ex ->
           Log.warn (fun f -> f "GUI thread failed: %s" (Printexc.to_string ex));
           Lwt.return ()
