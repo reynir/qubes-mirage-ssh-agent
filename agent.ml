@@ -6,13 +6,13 @@ type identity = { privkey : Ssh_agent.Privkey.t; comment : string }
 let pubkey_identity_of_identity { privkey; comment } =
   match privkey with
   | Ssh_agent.Privkey.Ssh_rsa key ->
-    { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_rsa (Nocrypto.Rsa.pub_of_priv key);
+    { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_rsa (Mirage_crypto_pk.Rsa.pub_of_priv key);
       comment }
   | Ssh_agent.Privkey.Ssh_rsa_cert (_key, cert) ->
     { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_rsa_cert cert;
       comment }
   | Ssh_agent.Privkey.Ssh_dss key ->
-    { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_dss (Nocrypto.Dsa.pub_of_priv key); comment }
+    { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_dss (Mirage_crypto_pk.Dsa.pub_of_priv key); comment }
   | Ssh_agent.Privkey.Blob _ ->
     failwith "Can't handle this key type"
 

@@ -70,7 +70,7 @@ module Main (DB : Qubes.S.DB) = struct
         )
     )
 
-  let start _qubesdb () =
+  let start (_qubesdb : DB.t) =
     Log.info (fun f -> f "Starting...");
     let qrexec = Qubes.RExec.connect ~domid:0 () in
     Qubes.GUI.connect ~domid:0 () |> watch_gui;

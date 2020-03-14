@@ -6,7 +6,7 @@ let main =
     package "ssh-agent";
     package "angstrom";
   ] in
-  foreign ~packages ~deps:[abstract nocrypto]
+  foreign ~packages
     "Unikernel.Main" (qubesdb @-> job)
 
 let () =
