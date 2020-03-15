@@ -37,7 +37,9 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
       Ssh_agent_failure
     end
   | Ssh_agentc_add_identity { privkey; key_comment } ->
-    identities := { privkey; comment = key_comment } :: !identities;
+    if not (List.mem { privkey; comment = key_comment } !identities)
+    then
+      identities := { privkey; comment = key_comment } :: !identities;
     Ssh_agent_success
   | Ssh_agentc_remove_identity pubkey ->
     let new_identities =
