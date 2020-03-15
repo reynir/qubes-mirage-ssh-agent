@@ -1,9 +1,13 @@
 let src = Logs.Src.create "ssh-agent" ~doc:"Ssh-agent logic"
 module Log = (val Logs.src_log src : Logs.LOG)
 
-type identity = { privkey : Ssh_agent.Privkey.t; comment : string }
+type identity = {
+  privkey : Ssh_agent.Privkey.t;
+  comment : string;
+  confirmation : bool;
+}
 
-let pubkey_identity_of_identity { privkey; comment } =
+let pubkey_identity_of_identity { privkey; comment; _ } =
   match privkey with
   | Ssh_agent.Privkey.Ssh_rsa key ->
     { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_rsa (Nocrypto.Rsa.pub_of_priv key);
@@ -29,17 +33,20 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
     begin match List.find (fun id ->
         (pubkey_identity_of_identity id).pubkey = pubkey)
         !identities with
-    | { privkey; comment } ->
+    | { privkey; comment; confirmation = false } ->
       Log.info (fun f -> f "Signing using key %s\n%!" comment);
       let signature = Ssh_agent.sign privkey flags blob in
       Ssh_agent_sign_response signature
+    | { confirmation = true; _ } ->
+      Log.warn (fun f -> f "Confirmation dialog not yet implemented");
+      Ssh_agent_failure
     | exception Not_found ->
       Ssh_agent_failure
     end
   | Ssh_agentc_add_identity { privkey; key_comment } ->
-    if not (List.mem { privkey; comment = key_comment } !identities)
-    then
-      identities := { privkey; comment = key_comment } :: !identities;
+    let new_identities =
+      List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
+    identities := { privkey; comment = key_comment; confirmation = false } :: new_identities;
     Ssh_agent_success
   | Ssh_agentc_remove_identity pubkey ->
     let new_identities =
@@ -60,7 +67,12 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
     Ssh_agent_failure
   | Ssh_agentc_unlock _ ->
     Ssh_agent_failure
-  | Ssh_agentc_add_id_constrained _ ->
+  | Ssh_agentc_add_id_constrained { privkey; key_comment; key_constraints = [Confirm] } ->
+    let new_identities =
+      List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
+    identities := { privkey; comment = key_comment; confirmation = true } :: new_identities;
+    Ssh_agent_success
+  | Ssh_agentc_add_id_constrained { key_constraints = _; _ } ->
     Ssh_agent_failure
   | Ssh_agentc_add_smartcard_key_constrained _ ->
     Ssh_agent_failure
