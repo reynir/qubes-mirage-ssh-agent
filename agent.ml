@@ -39,8 +39,14 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
   | Ssh_agentc_add_identity { privkey; key_comment } ->
     identities := { privkey; comment = key_comment } :: !identities;
     Ssh_agent_success
-  | Ssh_agentc_remove_identity _ ->
-    Ssh_agent_failure
+  | Ssh_agentc_remove_identity pubkey ->
+    let new_identities =
+      List.filter (fun identity ->
+          let pub_identity = pubkey_identity_of_identity identity in
+          pub_identity.pubkey <> pubkey)
+        !identities
+    in identities := new_identities;
+    Ssh_agent_success
   | Ssh_agentc_remove_all_identities ->
     identities := [];
     Ssh_agent_success
