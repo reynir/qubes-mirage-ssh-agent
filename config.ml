@@ -7,7 +7,7 @@ let main =
     package "angstrom";
   ] in
   foreign ~packages ~deps:[abstract nocrypto]
-    "Unikernel.Main" (qubesdb @-> job)
+    "Unikernel.Main" (pclock @-> qubesdb @-> job)
 
 let () =
-  register "qubes-ssh-agent" ~argv:no_argv [ main $ default_qubesdb ]
+  register "qubes-ssh-agent" ~argv:no_argv [ main $ default_posix_clock $ default_qubesdb ]
