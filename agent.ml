@@ -5,6 +5,7 @@ type identity = {
   privkey : Ssh_agent.Privkey.t;
   comment : string;
   confirmation : bool;
+  end_of_lifetime : Ptime.t option;
 }
 
 let pubkey_identity_of_identity { privkey; comment; _ } =
@@ -22,7 +23,7 @@ let pubkey_identity_of_identity { privkey; comment; _ } =
 
 let identities : identity list ref = ref []
 
-let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
+let handler (type req_type) now (request : req_type Ssh_agent.ssh_agent_request)
   : req_type Ssh_agent.ssh_agent_response =
   let open Ssh_agent in
   match request with
@@ -33,10 +34,12 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
     begin match List.find (fun id ->
         (pubkey_identity_of_identity id).pubkey = pubkey)
         !identities with
-    | { privkey; comment; confirmation = false } ->
+    | { end_of_lifetime = Some end_of_lifetime; _ } when Ptime.is_later end_of_lifetime ~than:now ->
+      Ssh_agent_failure
+    | { privkey; comment; confirmation = false; end_of_lifetime = _ } ->
       Log.info (fun f -> f "Signing using key %s\n%!" comment);
-      let signature = Ssh_agent.sign privkey flags blob in
-      Ssh_agent_sign_response signature
+          let signature = Ssh_agent.sign privkey flags blob in
+          Ssh_agent_sign_response signature
     | { confirmation = true; _ } ->
       Log.warn (fun f -> f "Confirmation dialog not yet implemented");
       Ssh_agent_failure
@@ -46,7 +49,9 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
   | Ssh_agentc_add_identity { privkey; key_comment } ->
     let new_identities =
       List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
-    identities := { privkey; comment = key_comment; confirmation = false } :: new_identities;
+    identities := { privkey; comment = key_comment;
+                    confirmation = false; end_of_lifetime = None }
+                  :: new_identities;
     Ssh_agent_success
   | Ssh_agentc_remove_identity pubkey ->
     let new_identities =
@@ -70,8 +75,40 @@ let handler (type req_type) (request : req_type Ssh_agent.ssh_agent_request)
   | Ssh_agentc_add_id_constrained { privkey; key_comment; key_constraints = [Confirm] } ->
     let new_identities =
       List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
-    identities := { privkey; comment = key_comment; confirmation = true } :: new_identities;
+    identities := { privkey; comment = key_comment;
+                    confirmation = true; end_of_lifetime = None }
+                  :: new_identities;
     Ssh_agent_success
+  | Ssh_agentc_add_id_constrained { privkey; key_comment; key_constraints = [Lifetime lifetime] } ->
+    let lifetime = match Int32.unsigned_to_int lifetime with
+      | Some lifetime -> lifetime
+      | None -> failwith "int should be able to represent uint32" in
+    begin match Ptime.add_span now (Ptime.Span.of_int_s lifetime) with
+      | None -> Ssh_agent_failure
+      | Some end_of_lifetime ->
+        let new_identities =
+          List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
+        identities := { privkey; comment = key_comment;
+                        confirmation = false; end_of_lifetime = Some end_of_lifetime }
+                      :: new_identities;
+        Ssh_agent_success
+    end
+  | Ssh_agentc_add_id_constrained { privkey; key_comment;
+                                    key_constraints = [Lifetime lifetime; Confirm] |
+                                                      [Confirm; Lifetime lifetime] } ->
+    let lifetime = match Int32.unsigned_to_int lifetime with
+      | Some lifetime -> lifetime
+      | None -> failwith "int should be able to represent uint32" in
+    begin match Ptime.add_span now (Ptime.Span.of_int_s lifetime) with
+      | None -> Ssh_agent_failure
+      | Some end_of_lifetime ->
+        let new_identities =
+          List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
+        identities := { privkey; comment = key_comment;
+                        confirmation = true; end_of_lifetime = Some end_of_lifetime }
+                      :: new_identities;
+        Ssh_agent_success
+    end
   | Ssh_agentc_add_id_constrained { key_constraints = _; _ } ->
     Ssh_agent_failure
   | Ssh_agentc_add_smartcard_key_constrained _ ->
