@@ -34,12 +34,12 @@ let handler (type req_type) now (request : req_type Ssh_agent.ssh_agent_request)
     begin match List.find (fun id ->
         (pubkey_identity_of_identity id).pubkey = pubkey)
         !identities with
-    | { end_of_lifetime = Some end_of_lifetime; _ } when Ptime.is_later end_of_lifetime ~than:now ->
+    | { end_of_lifetime = Some end_of_lifetime; _ } when Ptime.is_later now ~than:end_of_lifetime ->
       Ssh_agent_failure
     | { privkey; comment; confirmation = false; end_of_lifetime = _ } ->
       Log.info (fun f -> f "Signing using key %s\n%!" comment);
-          let signature = Ssh_agent.sign privkey flags blob in
-          Ssh_agent_sign_response signature
+      let signature = Ssh_agent.sign privkey flags blob in
+      Ssh_agent_sign_response signature
     | { confirmation = true; _ } ->
       Log.warn (fun f -> f "Confirmation dialog not yet implemented");
       Ssh_agent_failure
