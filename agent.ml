@@ -23,6 +23,11 @@ let pubkey_identity_of_identity { privkey; comment; _ } =
 
 let identities : identity list ref = ref []
 
+let without_key identities privkey =
+  List.filter (fun { privkey = other_privkey; _ } ->
+      other_privkey <> privkey)
+    identities
+
 let handler (type req_type) now (request : req_type Ssh_agent.ssh_agent_request)
   : req_type Ssh_agent.ssh_agent_response =
   let open Ssh_agent in
@@ -47,11 +52,9 @@ let handler (type req_type) now (request : req_type Ssh_agent.ssh_agent_request)
       Ssh_agent_failure
     end
   | Ssh_agentc_add_identity { privkey; key_comment } ->
-    let new_identities =
-      List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
     identities := { privkey; comment = key_comment;
                     confirmation = false; end_of_lifetime = None }
-                  :: new_identities;
+                  :: without_key !identities privkey;
     Ssh_agent_success
   | Ssh_agentc_remove_identity pubkey ->
     let new_identities =
@@ -73,11 +76,9 @@ let handler (type req_type) now (request : req_type Ssh_agent.ssh_agent_request)
   | Ssh_agentc_unlock _ ->
     Ssh_agent_failure
   | Ssh_agentc_add_id_constrained { privkey; key_comment; key_constraints = [Confirm] } ->
-    let new_identities =
-      List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
     identities := { privkey; comment = key_comment;
                     confirmation = true; end_of_lifetime = None }
-                  :: new_identities;
+                  :: without_key !identities privkey;
     Ssh_agent_success
   | Ssh_agentc_add_id_constrained { privkey; key_comment; key_constraints = [Lifetime lifetime] } ->
     let lifetime = match Int32.unsigned_to_int lifetime with
@@ -86,11 +87,9 @@ let handler (type req_type) now (request : req_type Ssh_agent.ssh_agent_request)
     begin match Ptime.add_span now (Ptime.Span.of_int_s lifetime) with
       | None -> Ssh_agent_failure
       | Some end_of_lifetime ->
-        let new_identities =
-          List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
         identities := { privkey; comment = key_comment;
                         confirmation = false; end_of_lifetime = Some end_of_lifetime }
-                      :: new_identities;
+                      :: without_key !identities privkey;
         Ssh_agent_success
     end
   | Ssh_agentc_add_id_constrained { privkey; key_comment;
@@ -102,11 +101,9 @@ let handler (type req_type) now (request : req_type Ssh_agent.ssh_agent_request)
     begin match Ptime.add_span now (Ptime.Span.of_int_s lifetime) with
       | None -> Ssh_agent_failure
       | Some end_of_lifetime ->
-        let new_identities =
-          List.filter (fun { privkey = other_privkey; _ } -> other_privkey <> privkey) !identities in
         identities := { privkey; comment = key_comment;
                         confirmation = true; end_of_lifetime = Some end_of_lifetime }
-                      :: new_identities;
+                      :: without_key !identities privkey;
         Ssh_agent_success
     end
   | Ssh_agentc_add_id_constrained { key_constraints = _; _ } ->
