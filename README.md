@@ -7,6 +7,7 @@ A WIP ssh-agent [Mirage](https://mirage.io/) unikernel for [Qubes OS](https://qu
 First, you need to install `opam` the OCaml package manager. Check out the instructions at http://opam.ocaml.org/doc/Install.html.
 Once installed it will use the system-installed OCaml compiler.
 You may have to compile a newer version of OCaml - for example version 4.02.3 is confirmed not to work (the version shipped with debian 9). Version 4.08.1 is confirmed to work.
+OCaml 4.08 or newer is required.
 To compile 4.08.1, run `opam switch install 4.08.1`. Then run `eval $(opam config env)` as the command should tell you to do.
 
 You should now have a working OCaml setup to continue.
