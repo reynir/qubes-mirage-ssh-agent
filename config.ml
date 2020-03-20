@@ -6,6 +6,7 @@ let main =
     package "mirage-qubes";
     package "ssh-agent";
     package "angstrom";
+    package "mirage-crypto-pk";
   ] in
   foreign ~packages
     "Unikernel.Main" (qubesdb @-> job)
