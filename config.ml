@@ -2,7 +2,7 @@ open Mirage
 
 let main =
   let packages = [
-    package ~max:"3.7.4" "mirage";
+    package ~max:"3.7.5" "mirage";
     package "mirage-qubes";
     package "ssh-agent";
     package "angstrom";
