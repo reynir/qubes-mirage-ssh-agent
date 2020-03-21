@@ -6,7 +6,6 @@ let main =
     package "mirage-qubes";
     package ~min:"0.3.0" "ssh-agent";
     package "angstrom";
-    package "mirage-crypto-rng";
     package "mirage-crypto-pk";
   ] in
   foreign ~packages
