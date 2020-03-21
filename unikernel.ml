@@ -51,7 +51,7 @@ let handler ~user command flow : int Lwt.t =
     let state = Angstrom.Buffered.parse Ssh_agent.Parse.ssh_agentc_message in
     loop state
 
-module Main (DB : Qubes.S.DB) = struct
+module Main (Random : Mirage_random.S) (DB : Qubes.S.DB) = struct
 
   (* We don't use the GUI, but it's interesting to keep an eye on it.
      If the other end dies, don't let it take us with it (can happen on log out). *)
@@ -70,7 +70,7 @@ module Main (DB : Qubes.S.DB) = struct
         )
     )
 
-  let start _qubesdb () =
+  let start _random (_qubesdb : DB.t) =
     Log.info (fun f -> f "Starting...");
     let qrexec = Qubes.RExec.connect ~domid:0 () in
     Qubes.GUI.connect ~domid:0 () |> watch_gui;
