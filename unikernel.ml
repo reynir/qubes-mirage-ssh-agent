@@ -77,7 +77,7 @@ module Main (Random : Mirage_random.S) (DB : Qubes.S.DB) = struct
     qrexec >>= fun qrexec ->
     let agent_listener = Qubes.RExec.listen qrexec
         handler in
-    Lwt.async (fun () -> OS.Lifecycle.await_shutdown_request () >>=
+    Lwt.async (fun () -> Xen_os.Lifecycle.await_shutdown_request () >>=
                 fun (`Poweroff | `Reboot) -> Qubes.RExec.disconnect qrexec);
     Log.info (fun f -> f "Ready to listen");
     agent_listener

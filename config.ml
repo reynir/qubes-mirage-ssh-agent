@@ -4,7 +4,8 @@ let main =
   let packages = [
     package ~build:true ~min:"3.7.5" "mirage";
     package "mirage-qubes";
-    package ~min:"0.3.0" "ssh-agent";
+    package "mirage-xen";
+    package ~min:"0.4.0" "ssh-agent";
     package "angstrom";
     package "mirage-crypto-pk";
   ] in

@@ -17,6 +17,8 @@ let pubkey_identity_of_identity { privkey; comment; _ } =
       comment }
   | Ssh_agent.Privkey.Ssh_dss key ->
     { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_dss (Mirage_crypto_pk.Dsa.pub_of_priv key); comment }
+  | Ssh_agent.Privkey.Ssh_ed25519 key ->
+    { Ssh_agent.pubkey = Ssh_agent.Pubkey.Ssh_ed25519 (Mirage_crypto_ec.Ed25519.pub_of_priv key); comment }
   | Ssh_agent.Privkey.Blob _ ->
     failwith "Can't handle this key type"
 
