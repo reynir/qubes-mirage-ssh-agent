@@ -1,6 +1,6 @@
-MIRAGE_KERNEL_NAME = qubes_ssh_agent.xen
+MIRAGE_KERNEL_NAME = dist/qubes-ssh-agent.xen
 #SOURCE_BUILD_DEP := ssh-agent-build-dep
-OCAML_VERSION ?= 4.08.1
+OCAML_VERSION ?= 4.14.0
 
 #ssh-agent-build-dep:
 #	opam pin -y add angstrom https://github.com/reynir/angstrom.git#no-c-blit
