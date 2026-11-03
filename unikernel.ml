@@ -26,7 +26,7 @@ let handler ~user command flow : int Lwt.t =
         let resp = Agent.handler req in
         let resp = with_faraday (fun t ->
             Ssh_agent.Serialize.write_ssh_agent_response t resp) in
-        Qubes.RExec.Flow.write flow (Cstruct.of_string resp) >>= fun () ->
+        Qubes.RExec.Flow.write flow resp >>= fun () ->
         let state = Angstrom.Buffered.parse Ssh_agent.Parse.ssh_agentc_message in
         let state = Angstrom.Buffered.feed state
             (`Bigstring (bigstring_of_unconsumed u)) in
@@ -37,7 +37,7 @@ let handler ~user command flow : int Lwt.t =
             let state = Angstrom.Buffered.feed state `Eof in
             loop state
           | `Ok input ->
-            let state = Angstrom.Buffered.feed state (`Bigstring (Cstruct.to_bigarray input)) in
+            let state = Angstrom.Buffered.feed state (`String input) in
             loop state
         end
       | Angstrom.Buffered.Fail ({ Angstrom.Buffered.len = 0; _ }, _, _e) ->
@@ -51,7 +51,7 @@ let handler ~user command flow : int Lwt.t =
     let state = Angstrom.Buffered.parse Ssh_agent.Parse.ssh_agentc_message in
     loop state
 
-module Main (Random : Mirage_random.S) (DB : Qubes.S.DB) = struct
+module Main (DB : Qubes.S.DB) = struct
 
   (* We don't use the GUI, but it's interesting to keep an eye on it.
      If the other end dies, don't let it take us with it (can happen on log out). *)
@@ -70,13 +70,12 @@ module Main (Random : Mirage_random.S) (DB : Qubes.S.DB) = struct
         )
     )
 
-  let start _random (_qubesdb : DB.t) =
+  let start (_qubesdb : DB.t) =
     Log.info (fun f -> f "Starting...");
     let qrexec = Qubes.RExec.connect ~domid:0 () in
     Qubes.GUI.connect ~domid:0 () |> watch_gui;
     qrexec >>= fun qrexec ->
-    let agent_listener = Qubes.RExec.listen qrexec
-        handler in
+    let agent_listener = Qubes.RExec.listen qrexec ~handler () in
     Lwt.async (fun () -> Xen_os.Lifecycle.await_shutdown_request () >>=
                 fun (`Poweroff | `Reboot) -> Qubes.RExec.disconnect qrexec);
     Log.info (fun f -> f "Ready to listen");

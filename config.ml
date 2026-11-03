@@ -1,16 +1,17 @@
+(* mirage >= 4.9.0 & < 4.12.0 *)
 open Mirage
 
 let main =
-  let packages = [
-    package ~build:true ~min:"3.7.5" "mirage";
-    package "mirage-qubes";
-    package "mirage-xen";
-    package ~min:"0.4.0" "ssh-agent";
-    package "angstrom";
-    package "mirage-crypto-pk";
-  ] in
-  foreign ~packages
-    "Unikernel.Main" (random @-> qubesdb @-> job)
+  main
+    ~packages:
+    [
+      package "mirage-qubes" ~min:"2.0.1";
+      package "mirage-xen" ~min:"9.0.1";
+      package ~min:"0.4.0" "ssh-agent";
+      package "angstrom";
+      package "mirage-crypto-pk";
+    ]
+  "Unikernel.Main" (qubesdb @-> job)
 
 let () =
-  register "qubes-ssh-agent" ~argv:no_argv [ main $ default_random $ default_qubesdb ]
+  register "qubes-ssh-agent" [ main $ default_qubesdb ]
